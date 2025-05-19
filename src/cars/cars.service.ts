@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 import { PrismaService } from 'src/prisma.service';
+
 
 @Injectable()
 export class CarsService {
@@ -24,15 +25,45 @@ export class CarsService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} car`;
-  }
+  async rent(id: number){
+    const selectedCar = await this.db.car.findUnique({
+      where: {
+        id: id,
+      }
+    })
+    if(!selectedCar){
+      throw new HttpException("Car not found", HttpStatus.NOT_FOUND)
+    }
 
-  update(id: number, updateCarDto: UpdateCarDto) {
-    return `This action updates a #${id} car`;
-  }
+    const now = new Date(Date.now());
+    const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  remove(id: number) {
-    return `This action removes a #${id} car`;
+    const alreadyRented = await this.db.rental.findFirst({
+      where : {
+          car_id: id,
+          start_date: {
+            lte: now
+          },
+          end_date: {
+            gte: now
+          }
+      }
+    })
+
+    console.log(alreadyRented)
+
+    if(alreadyRented){
+      throw new HttpException("Car already rented", HttpStatus.CONFLICT)
+    }
+
+    const newRental = await this.db.rental.create({
+      data: {
+        start_date: now, 
+        end_date: oneWeekLater,
+        car_id: id
+      }
+    })
+
+    return newRental;
   }
 }

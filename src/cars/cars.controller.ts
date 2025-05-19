@@ -17,9 +17,8 @@ export class CarsController {
     return this.carsService.findAll();
   }
 
-  /*@Post(":id/rent")
+  @Post(":id/rent")
   rent(@Param('id') id:string){
     return this.carsService.rent(+id)
   }
-    */
 }
