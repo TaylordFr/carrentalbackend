@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,3 +6,25 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model Car {
+  @@map("cars")
+  id                   Int    @id @default(autoincrement())
+  license_plate_number String?   @db.VarChar(20)
+  brand                String?   @db.VarChar(255)
+  model                String?   @db.VarChar(255)
+  daily_cost           Int?
+  created_at           DateTime? @db.Timestamp(0) @default(now())
+  updated_at           DateTime? @db.Timestamp(0) @default(now())
+  rentals Rental[]
+}
+
+model Rental{
+  @@map("rentals")
+  id Int @id @default(autoincrement())
+  car_id Int
+  car Car @relation(fields: [car_id], references: [id])
+  end_date DateTime
+  start_date DateTime
+}
+
